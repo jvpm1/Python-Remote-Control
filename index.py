@@ -1,10 +1,15 @@
-import socket
+import websockets
+import pyautogui
 import threading
+import socket
 import json
 import signal
 import sys
 import tkinter as tk
 from tkinter import messagebox
+import asyncio
+
+PORT = 6969
 
 def msg(title="", message=""):
     """Popup"""
@@ -25,103 +30,77 @@ def get_ip_code(ip):
     try:
         split = ip.split(".")
         return int(split[-1])
-    except:
+    except Exception:
         return None    
     
-class Host:
-    def __init__(self):
-        
-        self.port = 6969
+class Server:
+    def __init__(self):  
         self.ip = get_ip()
         self.ip_code = get_ip_code(self.ip)
+        self.server = None
 
-        self.running = False
-        self.closing = False
-
-        self.host_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-    def close(self):
+    def stop(self):
         """Handles closing"""
+        if self.server:
+            print("Shutting down...")
+            self.server.close()
         
-        if self.closing:
-            return
-        self.closing = True
+    def run_command(self, response):
+        type = response.get("type", "")   
+        data = response.get("data", {})
 
-        print("Shutting down...")
-        
-        self.running = False
-        try:
-            self.host_socket.close()
-        except:
-            pass
+        if type == "move_mouse":
+            current_x, current_y = pyautogui.position()
+            direction = data.get("direction", {})
 
-    def start(self):
-        # Ctrl + C Closing handler
-        signal.signal(signal.SIGINT, lambda sig, frame: self.close())
-        
-        try:
-            self.host_socket.bind(('0.0.0.0', self.port))
-            self.host_socket.listen(5)
-
-            msg("Info", f"Connection code: {self.ip_code}")
-            print(f"Running | port={self.port}, ip={self.ip}")
-    
-            self.running = True
-            self.handle_connections()
+            pyautogui.moveTo(
+                current_x - direction.get("x", 0),
+                current_y - direction.get("y", 0)
+            )
+        elif type == "click":
+            pyautogui.click()
             
-        except Exception as err:
-            print(f"Error whilst starting host: {err}")
-            self.close()
+    async def on_client_event(self, websocket):
+        """
+        Handles client connection
 
-    def handle_client(self, client_socket, client_address):
-        """Processes the data given by the clients"""
-        try: 
-            while self.running:
-                try:
-                    data = client_socket.recv(4096)
-                    if not data:
-                        break
-                
-                    try: 
-                        json_data = json.loads(data.decode('utf-8'))
-                        print(f"Received data from {client_address}")
-                    except json.JSONDecodeError:
-                        print(f"{client_address} sent invalid JSON")
-                except:
-                    pass
-        finally:
-            client_socket.close()
-            print(f"Connection closed with {client_address}")
+        Json data example:
+        {
+            type: <string>
+            value: <any>
+        }
+        """
+        client_info = websocket.remote_address
+        print(f"New connection from {client_info}")
 
-    def handle_connections(self):
-        """Handles the new clients that are connecting"""
         try:
-            while self.running:
-                try:
-                    self.host_socket.settimeout(1.0)
-                    client_socket, client_address = self.host_socket.accept()
+            async for msg in websocket:
+                try: 
+                    data = json.loads(msg)
+                    self.run_command(data)
+                    print(f"Received data from {client_info}: {data}")
+                except json.JSONDecodeError:
+                    print(f"Invalid json from {client_info}")
+        except websockets.exceptions.ConnectionClosed:
+            print(f"Connection closed with {client_info}")
 
-                    print(f"New connection from {client_address}")
+    async def start(self):
+        self.server = await websockets.serve(
+            self.on_client_event,
+            "0.0.0.0",
+            PORT
+        )
 
-                    client_thread = threading.Thread(
-                        target=self.handle_client,
-                        args=(client_socket, client_address)
-                    )
-                    client_thread.daemon = True
-                    client_thread.start()
-                except socket.timeout:
-                    continue
-        finally:
-            self.close()
-    
-    
+        print(f"WebSocket server running | port={PORT}, ip={self.ip}, code={self.ip_code}")
+
+        await self.server.wait_closed()
+
+async def main():
+    server = Server()
+    try: 
+        await server.start()
+    except Exception as err:
+        print(f"Something wen't wrong upon starting the server: {err}")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "client":
-        pass
-    else:
-        host = Host()
-        host.start()
+    asyncio.run(main())

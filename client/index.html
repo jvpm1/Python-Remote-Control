@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      .mouse-btn {
+        width: 100%;
+        height: 250px;
+        border-radius: 20px;
+        border: 1px solid rgb(200, 200, 200);
+        background-color: rgb(250, 250, 250);
+      }
+    </style>
+  </head>
+  <body class="flex flex-row justify-center items-center">
+    <main class="relitive w-10/11 flex flex-col">
+      <div>
+        <input type="checkbox" name="spin-mouse" id="spin-mouse" />
+        <span>Hello</span>
+      </div>
+
+      <div
+        id="mouse-controller-container"
+        class="flex flex-col justify-center gap-5"
+      >
+        <button class="mouse-btn" id="up-btn" disabled>↑</button>
+
+        <div class="flex flex-row w-full justify-between gap-5">
+          <button class="mouse-btn" id="left-btn" disabled>←</button>
+          <button class="mouse-btn" id="click-btn" disabled>Click</button>
+          <button class="mouse-btn" id="right-btn" disabled>→</button>
+        </div>
+
+        <button class="mouse-btn" id="down-btn" disabled>↓</button>
+      </div>
+    </main>
+  </body>
+</html>
