@@ -9,10 +9,6 @@ A system for remotely controlling your computer functions using WebSockets. This
 - Responsive Vue.js web interface
 - Multi clients support
 
-## Connection visualization
-
-![logic](./assets/images/logic.jpg)
-
 ## How to run?
 
 ### Server Requirements
@@ -51,3 +47,24 @@ A system for remotely controlling your computer functions using WebSockets. This
 2. Enter the connection code displayed by the server.
 
 3. Once connected, use the interface to control the host computer.
+
+## Connection visualization
+
+![logic](./assets/images/logic.jpg)
+
+## Image preview
+
+### Client (Code, Mouse Control)
+
+On the client you can put in the code provided to connect to the host.
+
+![code](./assets/images/clientPreviewCode.png)
+
+At the bottom you'll see different icons and that'll be your tabs.
+![mouse](./assets/images/clientPreviewMouse.png)
+
+### Server (Terminal)
+
+The server will create a websocket on the port 6969 and will also provide the code in the terminal.
+
+![server](/assets/images/serverPreview.png)
