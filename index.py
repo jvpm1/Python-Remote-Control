@@ -8,14 +8,39 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 import asyncio
+import zlib
+
+mouseDirections = {
+    "up": (0, 1),
+    "down": (0, -1),
+    "left": (1, 0),
+    "right": (-1, 0)
+}
 
 PORT = 6969
 
+def shorten_ip(ip):
+    # Made possible by Claude
+    split = ip.split('.')
+    if len(split) != 4:
+        raise ValueError("Invalid ip length")
+
+    num = 0
+    for value in split:
+        num = num * 256 + int(value)
+
+    chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+    result = ""
+    while num > 0:
+        result = chars[num % 36] + result
+        num //= 36
+
+    return result or "0"
+
 def msg(title="", message=""):
     """Popup"""
-
     messagebox.showinfo(title, message)
-    
+
 def get_ip():
     try:
         temp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -25,41 +50,43 @@ def get_ip():
         return ip
     except Exception:
         return "127.0.0.1"
-    
+
 def get_ip_code(ip):
     try:
         split = ip.split(".")
         return int(split[-1])
     except Exception:
         return None    
-    
+
 class Server:
     def __init__(self):  
         self.ip = get_ip()
         self.ip_code = get_ip_code(self.ip)
         self.server = None
+        self.running = False
 
     def stop(self):
         """Handles closing"""
         if self.server:
             print("Shutting down...")
+            self.running = False
             self.server.close()
-        
+
     def run_command(self, response):
         type = response.get("type", "")   
-        data = response.get("data", {})
+        # data = response.get("data", {})
 
-        if type == "move_mouse":
+        mouseEvent = mouseDirections.get(type, False)
+        if mouseEvent:
             current_x, current_y = pyautogui.position()
-            direction = data.get("direction", {})
 
             pyautogui.moveTo(
-                current_x - direction.get("x", 0),
-                current_y - direction.get("y", 0)
+                current_x - mouseEvent[0] * 10,
+                current_y - mouseEvent[1] * 10
             )
         elif type == "click":
             pyautogui.click()
-            
+
     async def on_client_event(self, websocket):
         """
         Handles client connection
@@ -85,22 +112,33 @@ class Server:
             print(f"Connection closed with {client_info}")
 
     async def start(self):
+        self.running = True
         self.server = await websockets.serve(
             self.on_client_event,
             "0.0.0.0",
             PORT
         )
 
-        print(f"WebSocket server running | port={PORT}, ip={self.ip}, code={self.ip_code}")
+        code = shorten_ip(self.ip)
 
-        await self.server.wait_closed()
+        print(f"WebSocket server running | port={PORT}, ip={self.ip}, code={code}")
+
+        try:
+            while self.running:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            self.stop()
 
 async def main():
     server = Server()
+    
+   
     try: 
         await server.start()
+    except KeyboardInterrupt:
+        print("Keyboard interrupt received")
     except Exception as err:
-        print(f"Something wen't wrong upon starting the server: {err}")
+        print(f"Something went wrong: {err}")
 
 if __name__ == "__main__":
     asyncio.run(main())
