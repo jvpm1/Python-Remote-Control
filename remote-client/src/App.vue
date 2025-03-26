@@ -1,3 +1,4 @@
+<!-- App.vue -->
 <script setup lang="ts">
 import { ref, defineAsyncComponent } from "vue";
 import MouseIcon from "./assets/images/mouse.svg";
@@ -27,22 +28,20 @@ const toggleComponent = (index: any) => {
 
   <!-- Main container -->
   <div id="main-container" class="w-screen h-screen flex flex-col">
-    <main class="h-full relative overflow-hidden">
+    <main class="h-full relative">
       <!-- Pages -->
       <div
         v-for="(page, index) in pages"
         :key="index"
-        class="w-full h-full absolute top-0 left-0"
+        class="absolute w-full h-full top-0 left-0"
       >
         <component
           :is="page.component"
           :class="{
-            'opacity-100 pointer-events-auto visible':
-              activePageIndex === index,
-            'opacity-0 scale-150 pointer-events-none invisible':
-              activePageIndex !== index,
+            visible: activePageIndex === index,
+            hidden: activePageIndex !== index,
           }"
-          class="w-full h-full transition-all duration-300"
+          class="w-full h-full"
         />
       </div>
 

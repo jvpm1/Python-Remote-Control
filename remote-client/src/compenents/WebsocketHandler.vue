@@ -1,14 +1,32 @@
+<!-- WebsocketHandler.vue -->
 <script lang="ts" setup>
 import { onMounted, ref, type Ref, onBeforeUnmount, nextTick } from "vue";
 import { connectSocket } from "../assets/modules/socket";
 import { getCommands, type Commands } from "../assets/modules/command";
 
 const code: Ref<string> = ref("");
+const errorDisplay: Ref<string | null> = ref(null);
 const inputCode: Ref<HTMLInputElement | null> = ref(null);
 const isConnected = ref(false);
 const isLoading = ref(false);
 
 let currentWebSocket: WebSocket | null = null;
+
+const abort = (message: string | null) => {
+  try {
+    if (currentWebSocket) {
+      currentWebSocket.close();
+    }
+
+    isConnected.value = false;
+    isLoading.value = false;
+
+    errorDisplay.value = message || null;
+  } catch (err) {
+    errorDisplay.value = "Error whilst aborting";
+    console.error("Abort error:", err);
+  }
+};
 
 const connect = async (): Promise<void> => {
   try {
@@ -20,47 +38,35 @@ const connect = async (): Promise<void> => {
     const websocket: WebSocket = await connectSocket(shortendCode);
 
     currentWebSocket = websocket;
+    errorDisplay.value = null;
     isLoading.value = true;
 
     websocket.onopen = () => {
       console.log("Connected");
-      isConnected.value = true;
+
+      isConnected.value = false;
       isLoading.value = false;
     };
 
     websocket.onclose = () => {
       console.log("Closed");
-      isConnected.value = false;
-      isLoading.value = false;
+      abort("Connection closed");
     };
 
-    websocket.onerror = (err) => {
-      console.error("WebSocket error:", err);
-      isConnected.value = false;
-      isLoading.value = false;
+    websocket.onerror = (err: any) => {
+      abort(`Couldn't connect to websocket: ${err.currentTarget.url}`);
     };
-
-    setTimeout(() => {
-      console.log("eee");
-      if (isLoading.value && !isConnected && websocket) {
-        isLoading.value = false;
-        websocket.close();
-        currentWebSocket = null;
-      }
-    }, 1000);
 
     inputCode.value?.blur();
-  } catch (error) {
-    console.error("Connection error:", error);
-    isConnected.value = false;
-    isLoading.value = false;
+  } catch (err) {
+    abort("Error whilst running websocket");
   }
 };
 
 const assignCommandEvents = async (): Promise<void> => {
   try {
     const commands = await getCommands();
-    console.log(commands);
+
     commands.buttons.forEach((args: Commands) => {
       args.element.addEventListener("click", () => {
         console.log("e");
@@ -68,7 +74,6 @@ const assignCommandEvents = async (): Promise<void> => {
         if (!isConnected.value || !currentWebSocket) {
           return;
         }
-        console.log("2e");
 
         currentWebSocket.send(
           JSON.stringify({
@@ -123,13 +128,19 @@ onMounted(() => {
   <div
     v-if="isLoading"
     id="loading-overlay"
-    class="absolute w-full h-full flex justify-center z-150 bg-white/50"
+    class="absolute w-full h-full flex flex-col items-center justify-center gap-5 z-150 bg-white/10 backdrop-blur-sm"
   >
     <img
       src="../assets/images/arrow-clockwise.svg"
       alt=""
       class="w-10 animate-spin"
     />
+    <button
+      class="bg-white p-2 px-5 rounded-2xl font-bold text-gray-600"
+      v-on:click="abort(null)"
+    >
+      Abort
+    </button>
   </div>
   <!-- Connect code -->
   <div
@@ -138,7 +149,7 @@ onMounted(() => {
       'opacity-0 pointer-events-none invisible': isConnected,
       'opacity-100 pointer-events-auto visible': !isConnected,
     }"
-    class="absolute w-screen h-screen bg-black/25 backdrop-blur z-50 flex flex-col justify-center items-center transition-all duration-800"
+    class="absolute w-screen h-screen bg-black/25 backdrop-blur space-y-5 z-50 flex flex-col justify-center items-center transition-opacity duration-800"
   >
     <input
       type="text"
@@ -148,5 +159,11 @@ onMounted(() => {
       v-model="code"
       @keyup.enter="connect"
     />
+    <div
+      v-if="errorDisplay != null"
+      class="w-10/11 p-5 bg-white rounded-2xl font-bold text-gray-700"
+    >
+      {{ errorDisplay }}
+    </div>
   </div>
 </template>
