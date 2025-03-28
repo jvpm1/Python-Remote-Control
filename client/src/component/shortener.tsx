@@ -1,4 +1,4 @@
-export const unshorten = (shortened: string): string => {
+export const unShorten = (shortened: string): string => {
   const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
   let num = 0;
 
