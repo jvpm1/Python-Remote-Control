@@ -2,10 +2,15 @@
 <script setup lang="ts">
 import { ref, defineAsyncComponent } from "vue";
 import MouseIcon from "./assets/images/mouse.svg";
+import JoyStickIcon from "./assets/images/joystick.svg";
 import WebsocketHandler from "./compenents/WebsocketHandler.vue";
 
 const MouseController = defineAsyncComponent(
   () => import("./compenents/MouseController.vue")
+);
+
+const StickController = defineAsyncComponent(
+  () => import("./compenents/StickController.vue")
 );
 
 const activePageIndex = ref(null);
@@ -15,6 +20,11 @@ const pages = [
     name: "Mouse Controller",
     component: MouseController,
     image: MouseIcon,
+  },
+  {
+    name: "Stick Controller",
+    component: StickController,
+    image: JoyStickIcon,
   },
 ];
 
@@ -41,15 +51,15 @@ const toggleComponent = (index: any) => {
             visible: activePageIndex === index,
             hidden: activePageIndex !== index,
           }"
-          class="w-full h-full"
+          class="w-full h-full transition-opacity duration-200"
         />
       </div>
 
       <div
-        class="flex items-center justify-center h-full transition-opacity duration-100"
+        class="flex items-center justify-center h-full"
         :class="{
-          'opacity-100': activePageIndex === null,
-          'opacity-0 pointer-events-none': activePageIndex !== null,
+          visible: activePageIndex === null,
+          hidden: activePageIndex !== null,
         }"
       >
         <p>:)</p>

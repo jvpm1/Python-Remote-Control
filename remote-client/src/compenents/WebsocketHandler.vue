@@ -42,13 +42,12 @@ const connect = async (): Promise<void> => {
     isLoading.value = true;
 
     websocket.onopen = () => {
-      console.log("Connected");
-
-      isConnected.value = false;
+      isConnected.value = true;
       isLoading.value = false;
+      console.log("Connected");
     };
 
-    websocket.onclose = () => {
+    websocket.onclose = (res: any) => {
       console.log("Closed");
       abort("Connection closed");
     };
@@ -108,6 +107,7 @@ const assignCommandEvents = async (): Promise<void> => {
 
 const init = async (): Promise<void> => {
   await nextTick();
+
   setTimeout(() => {
     assignCommandEvents();
   }, 500);
@@ -121,6 +121,8 @@ onBeforeUnmount(() => {
 
 onMounted(() => {
   init();
+
+  code.value = "2tx04n";
 });
 </script>
 <template>
@@ -144,24 +146,20 @@ onMounted(() => {
   </div>
   <!-- Connect code -->
   <div
-    id="connect-code-overlay"
-    :class="{
-      'opacity-0 pointer-events-none invisible': isConnected,
-      'opacity-100 pointer-events-auto visible': !isConnected,
-    }"
+    v-if="!isConnected"
     class="absolute w-screen h-screen bg-black/25 backdrop-blur space-y-5 z-50 flex flex-col justify-center items-center transition-opacity duration-800"
   >
     <input
       type="text"
       ref="inputCode"
-      placeholder="Enter code"
+      placeholder="Enter connection code"
       class="w-5/8 h-14 bg-white font-bold text-center text-xl rounded-2xl outline-none focus:scale-105 transition-all ease-in-out"
       v-model="code"
       @keyup.enter="connect"
     />
     <div
       v-if="errorDisplay != null"
-      class="w-10/11 p-5 bg-white rounded-2xl font-bold text-gray-700"
+      class="w-10/11 p-3 bg-white rounded-2xl font-bold text-gray-700"
     >
       {{ errorDisplay }}
     </div>
