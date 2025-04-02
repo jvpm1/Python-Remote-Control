@@ -54,7 +54,7 @@ A system for remotely controlling your computer functions using WebSockets. This
 
 ## Image preview
 
-### Client (Code, Mouse Control)
+### Client new (Code, Mouse Control)
 
 On the client you can put in the code provided to connect to the host.
 
@@ -63,8 +63,15 @@ On the client you can put in the code provided to connect to the host.
 At the bottom you'll see different icons and that'll be your tabs.
 ![mouse](./assets/images/clientPreviewMouse.png)
 
-### Server (Terminal)
+![annoy](./assets/images/clientPreviewAnnoy.png)
+
+### Server new (Terminal)
 
 The server will create a websocket on the port 6969 and will also provide the code in the terminal.
 
 ![server](/assets/images/serverPreview.png)
+
+### Old Version
+
+![codeOld](/assets/images/clientPreviewCodeOld.png)
+![codeOld](/assets/images/clientPreviewMouseOld.png)
