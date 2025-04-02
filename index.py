@@ -2,6 +2,7 @@ import websockets
 import pyautogui
 import threading
 import socket
+import random
 import json
 import signal
 import sys
@@ -10,18 +11,16 @@ from tkinter import messagebox
 import asyncio
 import zlib
 
-mouseDirections = {
-    "up": (0, 1),
-    "down": (0, -1),
-    "left": (1, 0),
-    "right": (-1, 0)
-}
+pyautogui.FAILSAFE = False
 
 PORT = 6969
+TOGGLES = {
+    "seizure": False,
+}
 
 def shorten_ip(ip):
     # Made possible by Claude
-    split = ip.split('.')
+    split = ip.split(".")
     if len(split) != 4:
         raise ValueError("Invalid ip length")
 
@@ -58,6 +57,13 @@ def get_ip_code(ip):
     except Exception:
         return None    
 
+def toggles_check():
+    if TOGGLES.get("seizure"):
+        pyautogui.move(
+            random.randint(-100, 100),
+            random.randint(-100, 100)
+        )
+
 class Server:
     def __init__(self):  
         self.ip = get_ip()
@@ -73,19 +79,31 @@ class Server:
             self.server.close()
 
     def run_command(self, response):
+        """
+        Json data example:
+        {
+            type: <string>
+            value: <any>
+        }
+        """
+
         type = response.get("type", "")   
-        # data = response.get("data", {})
+        data = response.get("data", {})
 
-        mouseEvent = mouseDirections.get(type, False)
-        if mouseEvent:
-            current_x, current_y = pyautogui.position()
+        if type == "movemouse":
+            x, y  = data.get("x", 0), data.get("y", 0)
 
-            pyautogui.moveTo(
-                current_x - mouseEvent[0] * 10,
-                current_y - mouseEvent[1] * 10
+            pyautogui.move(
+                x,
+                y,
             )
-        elif type == "click":
-            pyautogui.click()
+        elif type == "mouseclick":
+            pyautogui.click(button=data.get("button", "right"))
+        elif type == "toggle":
+            name = data.get("name", "")
+            toggle = data.get("toggle", False)
+            TOGGLES[name] = toggle
+
 
     async def on_client_event(self, websocket):
         """
@@ -125,14 +143,14 @@ class Server:
 
         try:
             while self.running:
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.1)
+                toggles_check()
         except asyncio.CancelledError:
             self.stop()
 
 async def main():
     server = Server()
-    
-   
+
     try: 
         await server.start()
     except KeyboardInterrupt:

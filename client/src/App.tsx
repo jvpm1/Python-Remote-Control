@@ -2,19 +2,24 @@
 import { createSignal } from "solid-js";
 
 // Components
-import { ConnectionComponent } from "./component/connection";
-import { unShorten } from "./component/shortener";
-import { FooterButton, MouseCompenent, PageCompenent } from "./component/pages";
+import { ConnectionComponent } from "./component/remote-control/Connection";
+import { unShorten } from "./component/util/shortener";
+import { FooterButton } from "./component/layout/FooterButton";
+import {
+  MouseComponent,
+  PageComponent,
+  AnnoyancesComponent,
+} from "./component/pages";
 
 // Images
-import MouseIcon from "./assets/imgs/mouse.svg";
+import TouchPadIcon from "./assets/imgs/touchpad.svg";
 import EmergencyIcon from "./assets/imgs/emergency.svg";
 
 // Signals
-const [isConnected, setConnected] = createSignal(true);
+const [isConnected, setConnected] = createSignal(false);
 const [isConnecting, setConnecting] = createSignal(false);
 const [connectionError, setError] = createSignal("");
-const [selectedPage, setPage] = createSignal(-1);
+const [selectedPage, setPage] = createSignal(0);
 
 // Misc
 let currentWebSocket!: WebSocket | null;
@@ -23,7 +28,7 @@ let connectContainerRef!: HTMLParagraphElement;
 // Functions
 const onPageButtonPress = (pageNumber: number) => {
   if (selectedPage() == pageNumber) {
-    setPage(-1);
+    // setPage(-1);
     return;
   }
 
@@ -39,7 +44,7 @@ const abort = () => {
   setConnecting(false);
 };
 
-const connectFunction = async (button: any, textbox: any): Promise<void> => {
+const connectFunction = (button: any, textbox: any) => {
   try {
     const connectionCode: string = "2tx04n"; //textbox.value;
 
@@ -71,11 +76,33 @@ const connectFunction = async (button: any, textbox: any): Promise<void> => {
       }
     };
 
+    websocket.onclose = () => {
+      abort();
+    };
+
     currentWebSocket = websocket;
   } catch (err) {
     abort();
 
     setError(`Internal error: ${err}`);
+  }
+};
+
+const sendCommand = (type: string, data: Record<string, any>) => {
+  try {
+    if (currentWebSocket == null || !isConnected()) {
+      return;
+    }
+
+    console.log(data);
+    currentWebSocket.send(
+      JSON.stringify({
+        type: type,
+        data: data,
+      })
+    );
+  } catch (err) {
+    console.log("sendCommand: " + err);
   }
 };
 
@@ -99,18 +126,23 @@ const App = () => {
         />
       </section>
 
-      <main class="w-full">
-        <PageCompenent
+      <main class="w-full h-full">
+        <PageComponent
           pageNumber={0}
           selectedPage={selectedPage}
-          component={<MouseCompenent />}
+          component={<MouseComponent sendCommand={sendCommand} />}
+        />
+        <PageComponent
+          pageNumber={1}
+          selectedPage={selectedPage}
+          component={<AnnoyancesComponent sendCommand={sendCommand} />}
         />
       </main>
 
       <footer class="flex flex-row items-center bg-neutral-800 justify-center gap-10 rounded-t-3xl text-md text-gray-300">
         <FooterButton
-          name="Mouse"
-          icon={MouseIcon}
+          name="Touchpad"
+          icon={TouchPadIcon}
           selectedPage={selectedPage}
           onPageButtonPress={onPageButtonPress}
           pageNumber={0}

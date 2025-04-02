@@ -1,4 +1,4 @@
-import { LoadingDots } from "./loading-dots";
+import { LoadingDots } from "../ui/LoadingDots";
 
 interface ConnectionProps {
   connectionError: any;
@@ -16,7 +16,7 @@ export const ConnectionComponent = (props: ConnectionProps) => {
   let codeTextBox;
   return (
     <div
-      class={`absolute inset-0 w-screen h-screen text-gray-300 flex justify-center items-center bg-neutral-900 p-4 transition-opacity duration-300 ${
+      class={`absolute z-50 inset-0 w-screen h-screen text-gray-300 flex justify-center items-center bg-neutral-900 p-4 transition-opacity duration-300 ${
         props.isConnected() ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
@@ -46,7 +46,7 @@ export const ConnectionComponent = (props: ConnectionProps) => {
               onClick={async (button) => {
                 props.connectFunction(button, codeTextBox);
               }}
-              class="bg-indigo-400 text-indigo-950 rounded-full text-xl px-11 h-13 transition-all active:bg-neutral-600 disabled:opacity-50 disabled:bg-neutral-600 items-center flex justify-center"
+              class="bg-blue-300 text-blue-900 rounded-full text-xl px-11 h-13 transition-all active:bg-neutral-600 disabled:opacity-50 disabled:bg-neutral-600 items-center flex justify-center"
               disabled={props.isConnecting()}
             >
               {props.isConnecting() ? <LoadingDots /> : "Connect"}
