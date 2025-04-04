@@ -154,7 +154,7 @@ class Server:
         code = shorten_ip(self.ip)
 
         print(f"WebSocket server running | port={PORT}, ip={self.ip}, code={code}")
-
+        msg("Server started!", f"Connection code: {code}")
         try:
             while self.running:
                 await asyncio.sleep(0.01)
