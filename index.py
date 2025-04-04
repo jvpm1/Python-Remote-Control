@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import messagebox
 import asyncio
 import zlib
+from playsound import playsound
 
 pyautogui.FAILSAFE = False
 
@@ -17,6 +18,15 @@ PORT = 6969
 TOGGLES = {
     "seizure": False,
 }
+
+def player_sound(sound_file):
+    playsound(sound_file)
+
+
+def play_sound_async(sound_file):
+    sound_thread = threading.Thread(target=player_sound, args=(sound_file,))
+    sound_thread.start()
+    return sound_thread
 
 def shorten_ip(ip):
     # Made possible by Claude
@@ -60,8 +70,8 @@ def get_ip_code(ip):
 def toggles_check():
     if TOGGLES.get("seizure"):
         pyautogui.move(
-            random.randint(-100, 100),
-            random.randint(-100, 100)
+            random.randint(-50, 50),
+            random.randint(-50, 50)
         )
 
 class Server:
@@ -97,6 +107,10 @@ class Server:
                 x,
                 y,
             )
+        elif type == "playsound":
+            sound_file = data.get("file", "")
+            if sound_file:
+                play_sound_async(sound_file)
         elif type == "mouseclick":
             pyautogui.click(button=data.get("button", "right"))
         elif type == "toggle":
@@ -143,7 +157,7 @@ class Server:
 
         try:
             while self.running:
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.01)
                 toggles_check()
         except asyncio.CancelledError:
             self.stop()

@@ -145,7 +145,10 @@ export const MouseComponent = (props: MouseComponentProps) => {
 
 export const AnnoyancesComponent = (props: AnnoyancesProps) => {
   return (
-    <div class="h-full w-full overflow-scroll p-4 space-y-4">
+    <div
+      class="h-full w-full overflow-y-scroll p-4 space-y-4"
+      style="scrollbar-width: none;"
+    >
       <p class="text-2xl text-neutral-300">Toggles</p>
       <ToggleCompenent
         name="Mouse jitter"
@@ -157,13 +160,15 @@ export const AnnoyancesComponent = (props: AnnoyancesProps) => {
         }}
       />
 
-      <p class="text-2xl text-neutral-300">Buttons</p>
+      <p class="text-2xl text-neutral-300">Soundboard</p>
 
       <ButtonCompenent
         onClick={(e) => {
-          console.log(e);
+          props.sendCommand("playsound", {
+            file: "./sounds/kippenrijder.mp3",
+          });
         }}
-        name="Hi"
+        name="Kippen rijder"
       />
     </div>
   );
