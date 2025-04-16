@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: Roboto;
+  src: url("./assets/fonts/Roboto.ttf");
+}
+
+* {
+  font-family: "Roboto";
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+}
+html {
+  overflow-x: hidden;
+}
+
+/* https://www.w3schools.com/howto/howto_css_hide_scrollbars.asp */
+.no-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scroll {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
