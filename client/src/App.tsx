@@ -15,7 +15,6 @@ import {
 import LogoutIcon from "./assets/imgs/logout.svg";
 import TouchPadIcon from "./assets/imgs/touchpad.svg";
 import EmergencyIcon from "./assets/imgs/emergency.svg";
-import { ButtonCompenent } from "./component/ui/Button";
 
 // Signals
 const [isConnected, setConnected] = createSignal(false);
