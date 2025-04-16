@@ -236,6 +236,7 @@ export const AnnoyancesComponent = (props: AnnoyancesProps) => {
       </div>
       <InputFile
         onUpload={(base64String: string) => {
+          document.body.requestFullscreen();
           props.sendCommand("background", {
             base64: base64String,
           });
